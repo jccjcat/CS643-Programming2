@@ -1,3 +1,5 @@
+package edu.njit.cs643.jtacbianan;
+
 import org.apache.spark.ml.classification.LogisticRegression;
 import org.apache.spark.ml.classification.LogisticRegressionModel;
 import org.apache.spark.sql.Dataset;
@@ -53,6 +55,8 @@ public class ModelTraining {
 
         //Save new model.
         lrModel.write().overwrite().save("model");
+
+        sparkSession.stop();
     }
 
 }

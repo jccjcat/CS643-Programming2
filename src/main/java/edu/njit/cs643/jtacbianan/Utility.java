@@ -1,3 +1,5 @@
+package edu.njit.cs643.jtacbianan;
+
 import org.apache.spark.ml.classification.LogisticRegressionModel;
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator;
 import org.apache.spark.ml.feature.VectorAssembler;

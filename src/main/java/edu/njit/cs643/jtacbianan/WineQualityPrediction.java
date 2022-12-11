@@ -1,3 +1,5 @@
+package edu.njit.cs643.jtacbianan;
+
 import org.apache.spark.ml.classification.LogisticRegressionModel;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -37,5 +39,7 @@ public class WineQualityPrediction {
         System.out.println("Evaluation Results:");
 
         Utility.evaluateAndSummarizeDataModel(predictionData);
+
+        sparkSession.stop();
     }
 }
