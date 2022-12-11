@@ -1,9 +1,9 @@
 import org.apache.spark.ml.classification.LogisticRegression;
 import org.apache.spark.ml.classification.LogisticRegressionModel;
-import org.apache.spark.ml.feature.VectorAssembler;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+
 import java.io.IOException;
 
 /**
@@ -18,13 +18,17 @@ public class ModelTraining {
      * @param args Command Line Arguments
      */
     public static void main(String[] args) throws IOException {
-        SparkSession sparkSession = Utility.InitializeSparkSession();
-        Dataset<Row> wineDataFrame = Utility.ReadDataframeFromCsvFile(sparkSession, "TrainingDataset.csv");
+        System.out.println("Model Training Application");
 
-        VectorAssembler vectorAssembler = new VectorAssembler()
-                .setInputCols(Utility.FEATURE_COLUMNS)
-                .setOutputCol("features");
-        Dataset<Row> assemblyResult = vectorAssembler.transform(wineDataFrame).select("quality", "features");
+        System.out.println("Initializng Spark:");
+
+        SparkSession sparkSession = Utility.initializeSparkSession();
+
+        System.out.println("Training Logistic Regression Model...");
+
+        //Initial Training
+        Dataset<Row> wineDataFrame = Utility.readDataframeFromCsvFile(sparkSession, "TrainingDataset.csv");
+        Dataset<Row> assemblyResult = Utility.assembleDataframe(wineDataFrame);
 
         LogisticRegression logisticRegression = new LogisticRegression()
                 .setFeaturesCol("features")
@@ -32,6 +36,22 @@ public class ModelTraining {
                 .setMaxIter(15)
                 .setLabelCol("quality");
         LogisticRegressionModel lrModel = logisticRegression.fit(assemblyResult);
+
+        System.out.println("Validating Trained Model");
+
+        //Validating Trained Model
+        Dataset<Row> validationDataFrame = Utility.readDataframeFromCsvFile(sparkSession, "ValidationDataset.csv");
+        Dataset<Row> assembledValidationDataFrame = Utility.assembleDataframe(validationDataFrame);
+        Dataset<Row> modelTransformationResult = Utility.transformDataframeWithModel(lrModel, assembledValidationDataFrame);
+
+        System.out.println("Validation Results");
+
+        //Print Results
+        Utility.evaluateAndSummarizeDataModel(modelTransformationResult);
+
+        System.out.println("Saving trained model.");
+
+        //Save new model.
         lrModel.write().overwrite().save("model");
     }
 

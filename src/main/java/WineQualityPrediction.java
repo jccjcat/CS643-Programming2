@@ -1,6 +1,4 @@
 import org.apache.spark.ml.classification.LogisticRegressionModel;
-import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator;
-import org.apache.spark.ml.feature.VectorAssembler;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -15,26 +13,29 @@ public class WineQualityPrediction {
      * @param args Command Line Arguments
      */
     public static void main(String[] args) {
-        SparkSession sparkSession = Utility.InitializeSparkSession();
-        Dataset<Row> validationDataFrame = Utility.ReadDataframeFromCsvFile(sparkSession, "ValidationDataset.csv");
-        VectorAssembler vectorAssembler = new VectorAssembler()
-                .setInputCols(Utility.FEATURE_COLUMNS)
-                .setOutputCol("features");
-        Dataset<Row> assemblerResult = vectorAssembler.transform(validationDataFrame).select("quality", "features");
+        System.out.println("Initializng Spark:");
+        SparkSession sparkSession = Utility.initializeSparkSession();
 
+        System.out.println("Loading Test Data Set");
+
+        //Load Test Dataframe
+        Dataset<Row> testingDataFrame = Utility.readDataframeFromCsvFile(sparkSession, "TestDataset.csv");
+        Dataset<Row> assembledTestDataFrame = Utility.assembleDataframe(testingDataFrame);
+
+        System.out.println("Loading Training Model");
+
+        //Load Training Model
         LogisticRegressionModel lrModel = LogisticRegressionModel.load("model");
 
-        Dataset<Row> predictionData = lrModel.transform(assemblerResult).select("features", "quality", "prediction");
+        System.out.println("Predicting using Trained Model and Test Data");
+
+        //Predict using Test Dataframe
+        Dataset<Row> predictionData = Utility.transformDataframeWithModel(lrModel, assembledTestDataFrame);
 
         predictionData.show();
 
-        MulticlassClassificationEvaluator evaluator = new MulticlassClassificationEvaluator()
-                .setLabelCol("quality")
-                .setPredictionCol("prediction");
+        System.out.println("Evaluation Results:");
 
-        double accuracy = evaluator.setMetricName("accuracy").evaluate(predictionData);
-        double f1 = evaluator.setMetricName("f1").evaluate(predictionData);
-        System.out.println("Model Accuracy:  " + accuracy);
-        System.out.println("F1 Score: " + f1);
+        Utility.evaluateAndSummarizeDataModel(predictionData);
     }
 }
