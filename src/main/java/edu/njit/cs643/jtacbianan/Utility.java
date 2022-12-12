@@ -32,7 +32,7 @@ public class Utility {
     public static SparkSession initializeSparkSession() {
         SparkSession session =  SparkSession.builder()
                 .appName(APP_NAME)
-                .master("local[" + THREADS_TO_USE + "]")
+                //.master("local[" + THREADS_TO_USE + "]")
                 .getOrCreate();
         session.sparkContext().setLogLevel("OFF");
         return session;
